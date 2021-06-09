@@ -1,0 +1,24 @@
+language: generic 
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t canozunal/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true canozunal/react-test npm test
+
+after_sucess:
+  - docker build -t canozunal/multi-client ./client
+  - docker build -t canozunal/multi-nginx ./nginx
+  - docker build -t canozunal/multi-server ./server
+  - docker build -t canozunal/multi-worker ./worker
+  # login to docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take images and push to docker hub
+  - docker push canozunal/multi-client
+  - docker push canozunal/multi-nginx
+  - docker push canozunal/multi-server
+  - docker push canozunal/multi-worker
+
